@@ -1,10 +1,9 @@
 
-
 ## PlanetNICFI
 
 <br>
 
-The **PlanetNICFI** R package includes functions to download and process the [NICFI](https://www.nicfi.no/) (**Norway's International Climate and Forest Initiative**) Planet Satellite Imagery utilizing the [Planet Mosaics API](https://developers.planet.com/docs/basemaps/reference/#tag/Basemaps-and-Mosaics)
+The **PlanetNICFI** R package includes functions to download and process the [NICFI](https://www.nicfi.no/) (**Norway's International Climate and Forest Initiative**) Planet Satellite Imagery utilizing the [Planet Mosaics API](https://developers.planet.com/docs/basemaps/reference/#tag/Basemaps-and-Mosaics). More details on the functionality of PlanetNICFI can be found in the [blog-post](http://mlampros.github.io/2021/06/12/Planet_NICFI_Satellite_Imagery/), Vignette and in the package Documentation ( *scroll down for information on how to use the* **docker image** )
 
 <br>
 
@@ -66,6 +65,85 @@ and to download the latest version of the package from Github,
 remotes::install_github('mlampros/PlanetNICFI')
 
 ```
+
+<br><br>
+
+
+#### **Docker Image** (if you want to avoid the installation of the System Requirements)
+
+<br>
+
+**Docker images** of the *PlanetNICFI* package are available to download from my [dockerhub](https://hub.docker.com/r/mlampros/planetnicfi) account. The images come with *Rstudio* and the *R-development* version (latest) installed. The whole process was tested on Ubuntu 18.04. To **pull** & **run** the image do the following,
+
+<br>
+
+```R
+
+docker pull mlampros/planetnicfi:rstudiodev
+
+docker run -d --name rstudio_dev -e USER=rstudio -e PASSWORD=give_here_your_password --rm -p 8787:8787 mlampros/planetnicfi:rstudiodev
+
+```
+
+<br>
+
+The user can also **bind** a home directory / folder to the image to use its files by specifying the **-v** command,
+
+<br>
+
+```R
+
+docker run -d --name rstudio_dev -e USER=rstudio -e PASSWORD=give_here_your_password --rm -p 8787:8787 -v /home/YOUR_DIR:/home/rstudio/YOUR_DIR mlampros/planetnicfi:rstudiodev
+
+
+```
+
+<br>
+
+In the latter case you might have first give permission privileges for write access to **YOUR_DIR** directory (not necessarily) using,
+
+<br>
+
+```R
+
+chmod -R 777 /home/YOUR_DIR
+
+
+```
+
+<br>
+
+The **USER** defaults to *rstudio* but you have to give your **PASSWORD** of preference (see [www.rocker-project.org](https://www.rocker-project.org/) for more information).
+
+<br>
+
+Open your web-browser and depending where the docker image was *build / run* give, 
+
+<br>
+
+**1st. Option** on your personal computer,
+
+<br>
+
+```R
+http://0.0.0.0:8787 
+
+```
+
+<br>
+
+**2nd. Option** on a cloud instance, 
+
+<br>
+
+```R
+http://Public DNS:8787
+
+```
+
+<br>
+
+to access the Rstudio console in order to give your username and password.
 
 <br>
 

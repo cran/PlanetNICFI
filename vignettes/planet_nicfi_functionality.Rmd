@@ -147,7 +147,7 @@ dtbl_keep_quads[, 'id_quad_page']
 
 Although we specified a maximum of 10 pages, as we see from the output, only 2 Quads are returned for our input bounding box. 
 
-In first place we can download and visualize the **thumbnail .png** images of these 2 files, which are small in size. For this purpose we'll utilize the [aria2c](https://aria2.github.io/) download utility. For installation instructions of **aria2c** (on all 3 Operating Systems) have a look at the **README.md** file of the **PlanetNICFI** R package. A nice feature of **aria2c** is that it allows paralleled download of files and it takes also various other parameters such as a **retry limit** or **maximum retries** (you can have a look at the [Documentation](https://aria2.github.io/manual/en/html/index.html) of *aria2c* for more information)
+In first place we can download and visualize the **thumbnail .png** images of these 2 files, which are small in size. For this purpose we'll utilize the [aria2c](https://aria2.github.io/) download utility. For installation instructions of **aria2c** (on all 3 Operating Systems) have a look at the [README.md](https://github.com/mlampros/PlanetNICFI#aria2c) file of the **PlanetNICFI** R package. A nice feature of **aria2c** is that it allows paralleled download of files and it takes also various other parameters such as a **retry limit** or **maximum retries** (you can have a look at the [Documentation](https://aria2.github.io/manual/en/html/index.html) of *aria2c* for more information)
 
 The **aria2c_download_paths** function of the R package allows the user to format the download web URL paths either of the **thumbnail png** or of the bigger **tif** files,
 
@@ -253,11 +253,7 @@ res_vrt = create_VRT_from_dir(dir_tifs = temp_dir_out,
 #.......................................................
 
 wkt_sf = sf::st_as_sfc(WKT, crs = 4326)
-crs_value = gdalUtils::gdalsrsinfo(VRT_out, as.CRS = TRUE)
-proj_info = crs_value@projargs
-if (is.na(proj_info)) {
-  stop("The 'gdalUtils::gdalsrsinfo' returned an NA! 'proj4' is not available in your OS!")
-}
+proj_info = proj_info_extract(path_to_raster = VRT_out)
 
 wkt_transf = sf::st_transform(wkt_sf, crs = proj_info)
 bbx_transf = sf::st_bbox(wkt_transf)
@@ -391,7 +387,7 @@ Change Vector Analysis     |
 
 <br>
 
-By solely plotting the **angle** of the **Change Vector Analysis** we can clearly see the deforested areas in green color.
+By solely plotting the **angle** of the **Change Vector Analysis** we can clearly see the deforestation of the area in green color.
 
 <br>
 

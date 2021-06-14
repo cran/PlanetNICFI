@@ -127,11 +127,7 @@ knitr::opts_chunk$set(fig.width = 6,
 #  #.......................................................
 #  
 #  wkt_sf = sf::st_as_sfc(WKT, crs = 4326)
-#  crs_value = gdalUtils::gdalsrsinfo(VRT_out, as.CRS = TRUE)
-#  proj_info = crs_value@projargs
-#  if (is.na(proj_info)) {
-#    stop("The 'gdalUtils::gdalsrsinfo' returned an NA! 'proj4' is not available in your OS!")
-#  }
+#  proj_info = proj_info_extract(path_to_raster = VRT_out)
 #  
 #  wkt_transf = sf::st_transform(wkt_sf, crs = proj_info)
 #  bbx_transf = sf::st_bbox(wkt_transf)
