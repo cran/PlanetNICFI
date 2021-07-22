@@ -387,7 +387,7 @@ Change Vector Analysis     |
 
 <br>
 
-By solely plotting the **angle** of the **Change Vector Analysis** we can clearly see the deforestation of the area in green color.
+By solely plotting the **angle** of the **Change Vector Analysis** we can clearly see the deforested areas in green color.
 
 <br>
 
