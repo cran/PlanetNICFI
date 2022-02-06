@@ -1,4 +1,5 @@
 
+
 ## PlanetNICFI
 
 <br>
@@ -13,6 +14,9 @@ The **PlanetNICFI** R package includes functions to download and process the [NI
 
 An **important parameter** to keep in mind is the **page_size** of the [nicfi_quads_bbox()](https://mlampros.github.io/PlanetNICFI/reference/nicfi_quads_bbox.html) function. Depending on what the user defines as **bbox_AOI** or **wkt_AOI** the **page_size** parameter needs to be adjusted too. The bigger the Area of Interest is the bigger the **page_size** parameter must be. That means the [nicfi_quads_bbox()](https://mlampros.github.io/PlanetNICFI/reference/nicfi_quads_bbox.html) function will return more Image products for a bigger area and the **page_size** parameter **must** be bigger than the **default** value of **50** so that all available Image products will be returned.
 
+<br>
+
+Another **important information** to keep in mind (if using the *'aria2c'* software to download the data - see the *'sequential_download_paths()'* function for an alternative) is that the user currently **has to download** the NICFI .tif files in a **temporary directory** due to the **aria2c_download_paths()** function. By specifying a different **default_directory** parameter other than a temporary directory in the **aria2c_bulk_donwload()** function the .tif files won't be downloaded in the correct folder.
 
 <br>
 
@@ -22,13 +26,13 @@ An **important parameter** to keep in mind is the **page_size** of the [nicfi_qu
 
 ##### **GDAL**
 
-Due to the fact that *PlanetNICFI* uses the [sf](https://github.com/r-spatial/sf) and [gdalUtils](https://CRAN.R-project.org/package=gdalUtils) R packages internally, **it is required** that the user has already [GDAL](https://gdal.org/) installed and configured. The [README.md file of the **'sf'**](https://github.com/r-spatial/sf#installing) package includes instructions on how to install and configure GDAL on all operating systems.
+The usage of the *PlanetNICFI* package requires a geospatial setup as specified in the [sf](https://github.com/r-spatial/sf#installing) or [terra](https://github.com/rspatial/terra#from-source-code) README.md files.
 
 <br>
 
 ##### **aria2c**
 
-The [aria2c](https://aria2.github.io/) software is required for the paralleled download of the data, which has to be installed first in the Operating System:
+Besides the *'sequential_download_paths()'* function the [aria2c](https://aria2.github.io/) software is another option to download the data in parallel. It has to be installed first in the Operating System:
 
 On **Ubuntu** this can be done using:
 
@@ -172,8 +176,8 @@ If you use the **PlanetNICFI** R package in your paper or research please cite:
 @Manual{,
   title = {{PlanetNICFI}: Processing of the 'Planet NICFI' Satellite Imagery using R},
   author = {Lampros Mouselimis},
-  year = {2021},
-  note = {R package version 1.0.0 using Imagery 2021 Planet Labs Inc. All use subject to the Participant License Agreement},
+  year = {2022},
+  note = {R package version 1.0.4 using Imagery 2021 Planet Labs Inc. All use subject to the Participant License Agreement},
   url = {https://CRAN.R-project.org/package=PlanetNICFI},
 }
 ```

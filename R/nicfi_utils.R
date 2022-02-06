@@ -38,11 +38,9 @@ compute_elapsed_time = function(time_start) {
 #'
 #' @param path_to_raster a valid path to a raster file
 #' @param verbose a boolean. If TRUE then information will be printed out in the console
-#' @param suppress_warnings a boolean. If TRUE then potential warnings will be suppressed
 #' @return a character string with the projection information
 #'
-#' @importFrom gdalUtils gdalsrsinfo
-#' @importFrom raster raster crs
+#' @importFrom terra rast crs
 #'
 #' @export
 #'
@@ -55,35 +53,15 @@ compute_elapsed_time = function(time_start) {
 #' proj_info = proj_info_extract(path_to_raster = pth_vrt)
 #'
 
-proj_info_extract = function(path_to_raster,
-                             verbose = FALSE,
-                             suppress_warnings = TRUE) {
+proj_info_extract = function(path_to_raster, verbose = FALSE) {
 
   if (!file.exists(path_to_raster)) stop(glue::glue("The raster file '{path_to_raster}' does not exist!"), call. = F)
 
-  crs_value = gdalUtils::gdalsrsinfo(srs_def = path_to_raster, as.CRS = TRUE)
-  proj_dat = crs_value@projargs
+  rst = terra::rast(x = path_to_raster)
+  crs_value = terra::crs(x = rst, proj = TRUE)
+  proj_dat = trimws(x = crs_value, which = 'both')
 
-  if (is.na(proj_dat)) {
-    if (verbose) {
-      if (!suppress_warnings) {
-        message("The projection-info based on the 'gdalUtils::gdalsrsinfo()' function corresponds to NA! Switch to the 'raster::raster()' function!")
-      }
-    }
-    if (suppress_warnings) {
-      crs_value = suppressWarnings(raster::raster(x = path_to_raster))
-    }
-    else {
-      crs_value = raster::raster(x = path_to_raster)
-    }
-    crs_value = raster::crs(crs_value)
-    proj_dat = crs_value@projargs
-
-    if (is.na(proj_dat)) {
-      stop("The projection-info based on the 'raster::raster()' function returned an NA too! Highly probable 'proj4' is not available in your OS!", call. = F)
-    }
-  }
-
+  if (is.na(proj_dat)) stop("The projection-info based on the 'terra::crs()' function corresponds to NA! Highly probable 'proj4' is not available in your Operating System!", call. = F)
   return(proj_dat)
 }
 
@@ -111,6 +89,7 @@ proj_info_extract = function(path_to_raster,
 #' @importFrom httr GET authenticate content
 #' @importFrom sf st_bbox st_as_sfc st_as_text st_crs
 #' @importFrom data.table setDT rbindlist
+#' @importFrom glue glue
 #'
 #' @examples
 #'
@@ -632,6 +611,116 @@ aria2c_bulk_donwload = function(vector_or_file_path,
 
 
 
+#' Download the Planet NICFI images sequentially
+#'
+#' @param aria2c_file_paths a vector of character strings. See the output of the 'aria2c_download_paths()' function for the correct format.
+#' @param default_directory a character string specifying a valid path where the files will be saved
+#' @param download_method a character string specifying the download method. Can be for instance "wget", "curl" or any available method of the "download.file()" function
+#' @param verbosity an integer specifying the verbosity (between 0 and 2). If 0 then verbosity is disabled, if 1 then only essential verbosity is displayed and if 2 then all available information will be printed out in the console.
+#' @return it doesn't return an R object but it saves the files to a directory
+#'
+#' @importFrom utils flush.console download.file
+#'
+#' @details
+#'
+#' This function does not require the 'aria2c' tool (system requirement) to download the imagery. It uses the 'utils::download.file()' function internally
+#'
+#' @export
+#'
+#' @examples
+#'
+#' \dontrun{
+#'
+#' require(PlanetNICFI)
+#'
+#' #....................................
+#' # first extract the available Mosaics
+#' #....................................
+#'
+#' api_key = 'use_your_planet_nicfi_API_key'
+#'
+#' mosaic_files = nicfi_mosaics(planet_api_key = api_key,
+#'                              type = 'monthly',
+#'                              crs_bbox = 4326,
+#'                              URL = 'https://api.planet.com/basemaps/v1/mosaics',
+#'                              verbose = TRUE)
+#'
+#' #....................................
+#' # keep the mosaic of 'September 2020'
+#' #....................................
+#'
+#' keep_idx = 1
+#' mosaic_ID = mosaic_files$dtbl_mosaic$id[keep_idx]
+#'
+#'
+#' #.....................................................
+#' # then extract the available Quad files for the Mosaic
+#' #.....................................................
+#'
+#' wkt_file = system.file('data_files/Sugar_Cane_Bolivia.wkt', package = "PlanetNICFI")
+#' WKT = readLines(wkt_file, warn = FALSE)
+#'
+#' quad_files = nicfi_quads_bbox(planet_api_key = api_key,
+#'                               mosaic_id = mosaic_ID,
+#'                               bbox_AOI = NULL,
+#'                               wkt_AOI = WKT,
+#'                               page_size = 10,
+#'                               crs_bbox = 4326,
+#'                               verbose = TRUE)
+#' #........................
+#' # download the .tif files
+#' #........................
+#'
+#' web_links_aria2c = aria2c_download_paths(mosaic_output = mosaic_files,
+#'                                          mosaic_id = mosaic_ID,
+#'                                          quads_output = quad_files,
+#'                                          img_type = 'tif')
+#'
+#' DIR_SAVE = tempdir(check = FALSE)
+#' print(DIR_SAVE)
+#'
+#' res_dat = sequential_download_paths(aria2c_file_paths = web_links_aria2c,
+#'                                     default_directory = DIR_SAVE,
+#'                                     download_method = 'wget',
+#'                                     verbosity = 1)
+#' }
+
+sequential_download_paths = function(aria2c_file_paths,
+                                     default_directory,
+                                     download_method = 'wget',
+                                     verbosity = 0) {
+
+  if (verbosity > 0) t_start = proc.time()
+  if (!verbosity %in% 0:2) stop("The 'verbosity' parameter must be one of 0, 1 or 2", call. = F)
+  SEQ = seq(from = 1, to = length(aria2c_file_paths), by = 2)
+  count_seq = 1
+  LEN = length(SEQ)
+
+  for (item in SEQ) {
+
+    if (verbosity > 0) {
+      message("File: ", count_seq, "/", LEN, " will be downloaded ...\r", appendLF = FALSE)
+      utils::flush.console()
+    }
+
+    URL_LINK = aria2c_file_paths[item]
+    DOWNLOAD_PATH = trimws(x = aria2c_file_paths[item+1], which = 'both')
+    DOWNLOAD_PATH = gsub('out=', '', DOWNLOAD_PATH)
+    DOWNLOAD_FULL_PATH = file.path(default_directory, DOWNLOAD_PATH)
+
+    utils::download.file(url = URL_LINK,
+                         destfile = DOWNLOAD_FULL_PATH,
+                         method = download_method,
+                         quiet = ifelse(verbosity == 2, FALSE, TRUE))
+
+    count_seq = count_seq + 1
+  }
+
+  if (verbosity > 0) compute_elapsed_time(t_start)
+}
+
+
+
 #' Create a Virtual Raster (VRT) file from the .tif files
 #'
 #' @param dir_tifs a valid path to a directory where the .tif files are saved
@@ -641,7 +730,7 @@ aria2c_bulk_donwload = function(vector_or_file_path,
 #' @return it doesn't return an object but it saves the output to a file
 #'
 #' @importFrom glue glue
-#' @importFrom gdalUtils gdalbuildvrt
+#' @importFrom sf gdal_utils
 #'
 #' @export
 #'
@@ -731,7 +820,7 @@ aria2c_bulk_donwload = function(vector_or_file_path,
 #' # consist of multiple files, i.e. a mosaic) and plot it
 #' #......................................................
 #'
-#' rst = raster::raster(VRT_out)
+#' rst = terra::rast(VRT_out)
 #' sp::plot(rst, axes = F, legend = F)
 #'
 #' }
@@ -747,10 +836,10 @@ create_VRT_from_dir = function(dir_tifs,
   if (length(lst_vrt) == 0) stop(glue::glue("The directory '{dir_tifs}' does not include any files of extension '{file_extension}'!"), call. = F)
 
   if (verbose) cat(glue::glue("The VRT Mosaic will be built from  {length(lst_vrt)}  '{file_extension}' files and will be saved in  '{output_path_VRT}' ..."), '\n')
-  vrt_mosaic = gdalUtils::gdalbuildvrt(gdalfile = lst_vrt,
-                                       output.vrt = output_path_VRT,
-                                       separate = FALSE,
-                                       verbose = verbose)
+  vrt_mosaic = sf::gdal_utils(util = 'buildvrt',
+                              source = lst_vrt,
+                              destination = output_path_VRT,
+                              quiet = !verbose)
 
   if (verbose) compute_elapsed_time(t_start)
 }
@@ -763,15 +852,14 @@ create_VRT_from_dir = function(dir_tifs,
 #' @param output_pth a valid path to the output .tif file. This file path can also point to a .vrt file by setting the 'of' parameter to 'VRT'
 #' @param bbox_AOI a list of the format "list(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)" that includes the bounding box 'xmin', 'xmax', 'ymin', 'ymax' coordinate values of the Area of Interest (AOI)
 #' @param threads an integer. In case that this parameter is greater than 1 then multiple threads will be utilized in the 'gdalwarp' function
-#' @param of a character string specifying the format of the saved file. The default is GeoTIFF (GTiff). For more information see the 'gdalwarp' function of the 'gdalUtils' package
-#' @param resize_method a character string specifying the resize method. Can be one of 'near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', 'max', 'min', 'med', 'q1', 'q3'. For more information see the 'r' parameter of  the 'gdalwarp' function of the 'gdalUtils' package
-#' @param return_raster a boolean. If TRUE then the function will return the cropped image as a RasterBrick too
+#' @param of a character string specifying the format of the saved file. The default is GeoTIFF (GTiff). For more information see the 'gdal_utils' function of the 'sf' package
+#' @param resize_method a character string specifying the resize method. Can be one of 'near', 'bilinear', 'cubic', 'cubicspline', 'lanczos', 'average', 'mode', 'max', 'min', 'med', 'q1', 'q3'. For more information see the 'r' parameter of  the 'gdal_utils' function of the 'sf' package
 #' @param verbose a boolean. If TRUE then information will be printed out in the console
-#' @return either NULL or a RasterBrick (if the parameter 'return_raster' is set to TRUE)
+#' @return a logical indicating success (i.e., TRUE); in case of failure, an error is raised
 #'
 #' @export
 #'
-#' @importFrom gdalUtils gdalwarp
+#' @importFrom sf gdal_utils
 #' @importFrom glue glue
 #'
 #' @examples
@@ -894,23 +982,23 @@ nicfi_crop_images = function(input_pth,
                              threads = 1,
                              of = 'GTiff',
                              resize_method = 'lanczos',
-                             return_raster = FALSE,
                              verbose = FALSE) {
 
   if (verbose) t_start = proc.time()
-  threads_multi = ifelse(threads > 1, TRUE, FALSE)
-  res_warp = gdalUtils::gdalwarp(srcfile = input_pth,
-                                 dstfile = output_pth,
-                                 r = resize_method,
-                                 te = c(bbox_AOI$xmin,
-                                        bbox_AOI$ymin,
-                                        bbox_AOI$xmax,
-                                        bbox_AOI$ymax),
-                                 of = of,
-                                 multi = threads_multi,
-                                 wo = as.character(glue::glue("NUM_THREADS={threads}")),
-                                 output_Raster = return_raster,
-                                 verbose = verbose)
+
+  vec_options = c("-te", bbox_AOI$xmin, bbox_AOI$ymin, bbox_AOI$xmax, bbox_AOI$ymax,
+                  "-r", resize_method,
+                  "-of", of)
+
+  if (threads > 1) {
+    vec_options = c(vec_options, "-multi", "-wo", as.character(glue::glue("NUM_THREADS={threads}")))
+  }
+
+  res_warp = sf::gdal_utils(util = 'warp',
+                            source = input_pth,
+                            destination = output_pth,
+                            options = vec_options,
+                            quiet = !verbose)
 
   if (verbose) compute_elapsed_time(t_start)
   return(res_warp)
