@@ -1,5 +1,4 @@
 
-
 ## PlanetNICFI
 
 <br>
@@ -81,6 +80,13 @@ remotes::install_github('mlampros/PlanetNICFI')
 
 <br><br>
 
+#### **Tropical Forests Satellite Data Coverage**
+
+<br>
+
+<img src="man/figures/nicfi_tropical_forests.png" ></img>
+
+<br>
 
 #### **Docker Image** (if you want to avoid the installation of the System Requirements)
 
@@ -126,7 +132,7 @@ chmod -R 777 /home/YOUR_DIR
 
 <br>
 
-The **USER** defaults to *rstudio* but you have to give your **PASSWORD** of preference (see [www.rocker-project.org](https://www.rocker-project.org/) for more information).
+The **USER** defaults to *rstudio* but you have to give your **PASSWORD** of preference (see [https://rocker-project.org/](https://rocker-project.org/) for more information).
 
 <br>
 
@@ -160,6 +166,12 @@ to access the Rstudio console in order to give your username and password.
 
 <br>
 
+### NICFI Satellite Data Program user community code repositories
+
+* https://github.com/NICFI-Satellite-Data-Program/Code-Repository
+
+<br>
+
 ### Attribution
 
 Please read the **COPYRIGHTS** file of the **PlanetNICFI** R package especially the section **'OBLIGATIONS AND RESTRICTIONS'**
@@ -176,8 +188,8 @@ If you use the **PlanetNICFI** R package in your paper or research please cite:
 @Manual{,
   title = {{PlanetNICFI}: Processing of the 'Planet NICFI' Satellite Imagery using R},
   author = {Lampros Mouselimis},
-  year = {2022},
-  note = {R package version 1.0.4 using Imagery 2021 Planet Labs Inc. All use subject to the Participant License Agreement},
+  year = {2023},
+  note = {R package version 1.0.5 using Imagery 2021 Planet Labs Inc. All use subject to the Participant License Agreement},
   url = {https://CRAN.R-project.org/package=PlanetNICFI},
 }
 ```

@@ -203,8 +203,11 @@ knitr::opts_chunk$set(fig.width = 6,
 
 ## -----------------------------------------------------------------------------
 #  
-#  orig_rst = raster::brick(x = pth_crop_2018)        # image 2018: origin or reference
-#  change_rst = raster::brick(x = pth_crop_out)       # image 2016
+#  # The 'RStoolbox' R Package is required, please install from Github
+#  # 'https://github.com/bleutner/RStoolbox' using remotes::install_github('bleutner/RStoolbox')
+#  
+#  orig_rst = terra::rast(x = pth_crop_2018)        # image 2018: origin or reference
+#  change_rst = terra::rast(x = pth_crop_out)       # image 2016
 #  
 #  bands = c(1, 5)                                    # bands 1 and 5 depict the difference better
 #  
@@ -213,6 +216,6 @@ knitr::opts_chunk$set(fig.width = 6,
 
 ## -----------------------------------------------------------------------------
 #  
-#  sp::plot(cva$angle, axes = F)
+#  terra::plot(cva$angle, axes = F)
 #  
 
